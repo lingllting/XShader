@@ -45,7 +45,7 @@
 			fixed4 frag (v2f i) : SV_Target
 			{
 				//float depth = i.vertex.z / i.vertex.w;
-				float depth = i.depth.x / 20;
+				float depth = i.depth.x / i.depth.y;
 				return Linear01Depth(depth);
 			}
 			ENDCG

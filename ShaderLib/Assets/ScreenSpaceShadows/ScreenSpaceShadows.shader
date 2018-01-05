@@ -67,7 +67,7 @@
 				//UV坐标
 				float2 shadowUV = (lightClipPos.xy / lightClipPos.w) * 0.5 + 0.5;
 				//灯光空间下的深度
-				float light_depth = Linear01Depth(lightClipPos.z / 20);
+				float light_depth = Linear01Depth(lightClipPos.z / lightClipPos.w);
 				//
 				float depth = tex2D(_ShadowMap, shadowUV).r;
 				if (light_depth > depth)
