@@ -1,0 +1,8 @@
+
+*.csproj
+ShaderLib/Temp/*
+ShaderLib/Library/*
+*.suo
+*.sln
+*.json
+*.userprefs
