@@ -99,6 +99,7 @@ inline UnityGI UnityGI_Base(UnityGIInput data, half occlusion, half3 normalWorld
     #endif
 
     o_gi.light = data.light;
+	//光源颜色乘以衰减系数
     o_gi.light.color *= data.atten;
 
     #if UNITY_SHOULD_SAMPLE_SH

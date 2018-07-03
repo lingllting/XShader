@@ -78,6 +78,7 @@ inline half4 Pow5 (half4 x)
     return x*x * x*x * x;
 }
 
+//Schlick菲涅耳近似
 inline half3 FresnelTerm (half3 F0, half cosA)
 {
     half t = Pow5 (1 - cosA);   // ala Schlick interpoliation
@@ -231,7 +232,9 @@ half4 BRDF1_Unity_PBS (half3 diffColor, half3 specColor, half oneMinusReflectivi
     half3 normal, half3 viewDir,
     UnityLight light, UnityIndirect gi)
 {
+	//Disney粗糙度
     half perceptualRoughness = SmoothnessToPerceptualRoughness (smoothness);
+	//半角向量
     half3 halfDir = Unity_SafeNormalize (light.dir + viewDir);
 
 // NdotV should not be negative for visible pixels, but it can happen due to perspective projection and normal mapping
@@ -261,24 +264,28 @@ half4 BRDF1_Unity_PBS (half3 diffColor, half3 specColor, half oneMinusReflectivi
     half lh = saturate(dot(light.dir, halfDir));
 
     // Diffuse term
+	// Disney漫反射项的计算
     half diffuseTerm = DisneyDiffuse(nv, nl, lh, perceptualRoughness) * nl;
 
     // Specular term
     // HACK: theoretically we should divide diffuseTerm by Pi and not multiply specularTerm!
     // BUT 1) that will make shader look significantly darker than Legacy ones
     // and 2) on engine side "Non-important" lights have to be divided by Pi too in cases when they are injected into ambient SH
+	// GGX粗糙度
     half roughness = PerceptualRoughnessToRoughness(perceptualRoughness);
 #if UNITY_BRDF_GGX
     // GGX with roughtness to 0 would mean no specular at all, using max(roughness, 0.002) here to match HDrenderloop roughtness remapping.
     roughness = max(roughness, 0.002);
+	// 微面元遮挡函数
     half V = SmithJointGGXVisibilityTerm (nl, nv, roughness);
+	// 微面元法线分布函数
     half D = GGXTerm (nh, roughness);
 #else
     // Legacy
     half V = SmithBeckmannVisibilityTerm (nl, nv, roughness);
     half D = NDFBlinnPhongNormalizedTerm (nh, PerceptualRoughnessToSpecPower(perceptualRoughness));
 #endif
-
+	
     half specularTerm = V*D * UNITY_PI; // Torrance-Sparrow model, Fresnel is applied later
 
 #   ifdef UNITY_COLORSPACE_GAMMA

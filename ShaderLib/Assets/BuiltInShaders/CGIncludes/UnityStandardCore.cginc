@@ -132,8 +132,9 @@ half3 PerPixelWorldNormal(float4 i_tex, half4 tangentToWorld[3])
         half3 newB = cross(normal, tangent);
         binormal = newB * sign (dot (newB, binormal));
     #endif
-
+	//切空间法线
     half3 normalTangent = NormalInTangentSpace(i_tex);
+	//世界空间法线
     half3 normalWorld = NormalizePerPixelNormal(tangent * normalTangent.x + binormal * normalTangent.y + normal * normalTangent.z); // @TODO: see if we can squeeze this normalize on SM2.0 as well
 #else
     half3 normalWorld = normalize(tangentToWorld[2].xyz);
@@ -171,11 +172,15 @@ half3 PerPixelWorldNormal(float4 i_tex, half4 tangentToWorld[3])
 
 struct FragmentCommonData
 {
+	//漫反射率，高光反射率
     half3 diffColor, specColor;
     // Note: smoothness & oneMinusReflectivity for optimization purposes, mostly for DX9 SM2.0 level.
     // Most of the math is being done on these (1-x) values, and that saves a few precious ALU slots.
+	//1-高光反射比例，光泽度
     half oneMinusReflectivity, smoothness;
+	//归一化的世界空间法线，视线和位置
     half3 normalWorld, eyeVec, posWorld;
+	//透明度
     half alpha;
 
 #if UNITY_STANDARD_SIMPLE
@@ -226,14 +231,19 @@ inline FragmentCommonData RoughnessSetup(float4 i_tex)
     return o;
 }
 
+//设置金属流的漫反射率，高光反射率，1-高光反射比例，光泽度
 inline FragmentCommonData MetallicSetup (float4 i_tex)
 {
+	//金属度和光泽度
     half2 metallicGloss = MetallicGloss(i_tex.xy);
+	//金属度
     half metallic = metallicGloss.x;
+	//光泽度
     half smoothness = metallicGloss.y; // this is 1 minus the square root of real roughness m.
 
     half oneMinusReflectivity;
     half3 specColor;
+	//漫反射率
     half3 diffColor = DiffuseAndSpecularFromMetallic (Albedo(i_tex), metallic, /*out*/ specColor, /*out*/ oneMinusReflectivity);
 
     FragmentCommonData o = (FragmentCommonData)0;
@@ -247,6 +257,7 @@ inline FragmentCommonData MetallicSetup (float4 i_tex)
 // parallax transformed texcoord is used to sample occlusion
 inline FragmentCommonData FragmentSetup (inout float4 i_tex, half3 i_eyeVec, half3 i_viewDirForParallax, half4 tangentToWorld[3], half3 i_posWorld)
 {
+    //根据视差来调整UV坐标
     i_tex = Parallax(i_tex, i_viewDirForParallax);
 
     half alpha = Alpha(i_tex.xy);
@@ -357,20 +368,28 @@ inline half4 VertexGIForward(VertexInput v, float3 posWorld, half3 normalWorld)
 // ForwardBase Pass顶点着色器输出结构体
 struct VertexOutputForwardBase
 {
+    //顶点的裁减空间坐标
     UNITY_POSITION(pos);
+	//UV信息：xy为主纹理UV， zw为细节纹理UV
     float4 tex                          : TEXCOORD0;
+	//归一化的世界空间的视线方向（不一定会归一化...）
     half3 eyeVec                        : TEXCOORD1;
-    half4 tangentToWorldAndPackedData[3]    : TEXCOORD2;    // [3x3:tangentToWorld | 1x3:viewDirForParallax or worldPos]
-    half4 ambientOrLightmapUV           : TEXCOORD5;    // SH or Lightmap UV
+	//[3x3:世界空间到切空间的转换矩阵 or 切线空间下的视线方向（反方向） | 1x3:世界空间法线 or 世界空间坐标]
+    half4 tangentToWorldAndPackedData[3]    : TEXCOORD2;    
+	//光照贴图UV or 球谐光照UV
+    half4 ambientOrLightmapUV           : TEXCOORD5;
+	//阴影UV
     UNITY_SHADOW_COORDS(6)
+	//雾UV
     UNITY_FOG_COORDS(7)
-
     // next ones would not fit into SM2.0 limits, but they are always for SM3.0+
+	//世界空间坐标
     #if UNITY_REQUIRE_FRAG_WORLDPOS && !UNITY_PACK_WORLDPOS_WITH_TANGENT
         float3 posWorld                 : TEXCOORD8;
     #endif
-
+	//GPU Instance相关
     UNITY_VERTEX_INPUT_INSTANCE_ID
+	//VR相关
     UNITY_VERTEX_OUTPUT_STEREO
 };
 
@@ -400,14 +419,14 @@ VertexOutputForwardBase vertForwardBase (VertexInput v)
     o.pos = UnityObjectToClipPos(v.vertex);
 	//UV信息：xy为主纹理UV， zw为细节纹理UV
     o.tex = TexCoords(v);
-	//归一化的视线方向（不一定会归一化...）
+	//归一化的世界空间的视线方向（不一定会归一化...）
     o.eyeVec = NormalizePerVertexNormal(posWorld.xyz - _WorldSpaceCameraPos);
 	//归一化的世界空间的法线
     float3 normalWorld = UnityObjectToWorldNormal(v.normal);
     #ifdef _TANGENT_TO_WORLD
 	    //归一化的世界空间切线
         float4 tangentWorld = float4(UnityObjectToWorldDir(v.tangent.xyz), v.tangent.w);
-
+		//切空间到世界空间的转换矩阵
         float3x3 tangentToWorld = CreateTangentToWorldPerVertex(normalWorld, tangentWorld.xyz, tangentWorld.w);
         o.tangentToWorldAndPackedData[0].xyz = tangentToWorld[0];
         o.tangentToWorldAndPackedData[1].xyz = tangentToWorld[1];
@@ -418,39 +437,46 @@ VertexOutputForwardBase vertForwardBase (VertexInput v)
         o.tangentToWorldAndPackedData[2].xyz = normalWorld;
     #endif
 
-    //We need this for shadow receving
+    //阴影UV
     UNITY_TRANSFER_SHADOW(o, v.uv1);
-
+	//光照贴图UV or 球谐光照UV
     o.ambientOrLightmapUV = VertexGIForward(v, posWorld, normalWorld);
 
     #ifdef _PARALLAXMAP
         TANGENT_SPACE_ROTATION;
+		//切空间下的视线方向（反方向）
         half3 viewDirForParallax = mul (rotation, ObjSpaceViewDir(v.vertex));
         o.tangentToWorldAndPackedData[0].w = viewDirForParallax.x;
         o.tangentToWorldAndPackedData[1].w = viewDirForParallax.y;
         o.tangentToWorldAndPackedData[2].w = viewDirForParallax.z;
     #endif
-
+	//雾UV
     UNITY_TRANSFER_FOG(o,o.pos);
     return o;
 }
 
+// ForwardBase的片段着色器函数
 half4 fragForwardBaseInternal (VertexOutputForwardBase i)
 {
+	//
     UNITY_APPLY_DITHER_CROSSFADE(i.pos.xy);
-
+	//FragmentCommonData设置
     FRAGMENT_SETUP(s)
-
+	//GPU Instance相关
     UNITY_SETUP_INSTANCE_ID(i);
+	//VR相关
     UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i);
-
+	//获取像素光源
     UnityLight mainLight = MainLight ();
+	//计算光源衰减系数
     UNITY_LIGHT_ATTENUATION(atten, i, s.posWorld);
-
+	//计算遮挡系数
     half occlusion = Occlusion(i.tex.xy);
+	//全局光照计算
     UnityGI gi = FragmentGI (s, occlusion, i.ambientOrLightmapUV, atten, mainLight);
-
+	//BRDF
     half4 c = UNITY_BRDF_PBS (s.diffColor, s.specColor, s.oneMinusReflectivity, s.smoothness, s.normalWorld, -s.eyeVec, gi.light, gi.indirect);
+	//自发光
     c.rgb += Emission(i.tex.xy);
 
     UNITY_APPLY_FOG(i.fogCoord, c.rgb);
@@ -483,6 +509,7 @@ struct VertexOutputForwardAdd
     UNITY_VERTEX_OUTPUT_STEREO
 };
 
+//
 VertexOutputForwardAdd vertForwardAdd (VertexInput v)
 {
     UNITY_SETUP_INSTANCE_ID(v);

@@ -152,6 +152,7 @@ half4 SpecularGloss(float2 uv)
     return sg;
 }
 
+//获取材质像素点的金属度（x分量）和光泽度（y分量）
 half2 MetallicGloss(float2 uv)
 {
     half2 mg;

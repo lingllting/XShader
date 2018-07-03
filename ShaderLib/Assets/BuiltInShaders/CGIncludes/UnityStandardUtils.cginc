@@ -43,10 +43,15 @@ inline half OneMinusReflectivityFromMetallic(half metallic)
     return oneMinusDielectricSpec - metallic * oneMinusDielectricSpec;
 }
 
+//根据反射率（albedo）金属度（metallic）求出高光反射率（specColor）和漫反射率（返回值）。
 inline half3 DiffuseAndSpecularFromMetallic (half3 albedo, half metallic, out half3 specColor, out half oneMinusReflectivity)
 {
+    //高光反射率：按金属度在unity_ColorSpaceDielectricSpec.rgb和Albedo.rgb之间插值
     specColor = lerp (unity_ColorSpaceDielectricSpec.rgb, albedo, metallic);
+	//1-高光反射比例
     oneMinusReflectivity = OneMinusReflectivityFromMetallic(metallic);
+	//漫反射率 = albedo * oneMinusDielectricSpec * (1 - metallic) = lerp(albedo * unity_ColorSpaceDielectricSpec.a, 0, metallic)
+	//漫反射率 = 反射率 * （1-高光反射比例）
     return albedo * oneMinusReflectivity;
 }
 
@@ -146,6 +151,7 @@ half3 BlendNormals(half3 n1, half3 n2)
     return normalize(half3(n1.xy + n2.xy, n1.z*n2.z));
 }
 
+// 创建切空间到世界空间的转换矩阵
 half3x3 CreateTangentToWorldPerVertex(half3 normal, half3 tangent, half tangentSign)
 {
     // For odd-negative scale transforms we need to flip the sign

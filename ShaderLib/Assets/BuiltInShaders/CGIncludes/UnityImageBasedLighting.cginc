@@ -490,7 +490,9 @@ struct Unity_GlossyEnvironmentData
     // - Forward case can have two blended cubemap (unusual should be deprecated).
 
     // Surface properties use for cubemap integration
+	//Disney粗糙度
     half    roughness; // CAUTION: This is perceptualRoughness but because of compatibility this name can't be change :(
+	//视线的反射方向
     half3   reflUVW;
 };
 
