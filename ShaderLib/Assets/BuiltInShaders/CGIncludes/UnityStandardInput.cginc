@@ -54,6 +54,7 @@ sampler2D   _EmissionMap;
 //-------------------------------------------------------------------------------------
 // Input functions
 
+//顶点着色器输入结构体
 struct VertexInput
 {
     float4 vertex   : POSITION;
@@ -69,6 +70,7 @@ struct VertexInput
     UNITY_VERTEX_INPUT_INSTANCE_ID
 };
 
+// 返回值：xy为主纹理uv,zw是细节纹理uv
 float4 TexCoords(VertexInput v)
 {
     float4 texcoord;

@@ -17,6 +17,8 @@
 //-------------------------------------------------------------------------------------
 // counterpart for NormalizePerPixelNormal
 // skips normalization per-vertex and expects normalization to happen per-pixel
+
+//归一化封装函数，高配的版本会不做归一化，在片段函数中归一化
 half3 NormalizePerVertexNormal (float3 n) // takes float to avoid overflow
 {
     #if (SHADER_TARGET < 30) || UNITY_STANDARD_SIMPLE
@@ -352,7 +354,7 @@ inline half4 VertexGIForward(VertexInput v, float3 posWorld, half3 normalWorld)
 
 // ------------------------------------------------------------------
 //  Base forward pass (directional light, emission, lightmaps, ...)
-
+// ForwardBase Pass顶点着色器输出结构体
 struct VertexOutputForwardBase
 {
     UNITY_POSITION(pos);
@@ -374,12 +376,16 @@ struct VertexOutputForwardBase
 
 VertexOutputForwardBase vertForwardBase (VertexInput v)
 {
+    //GPU Instance相关
     UNITY_SETUP_INSTANCE_ID(v);
+	//顶点函数输出结构体定义和初始化
     VertexOutputForwardBase o;
     UNITY_INITIALIZE_OUTPUT(VertexOutputForwardBase, o);
+	//GPU Instance相关
     UNITY_TRANSFER_INSTANCE_ID(v, o);
+	//VR相关
     UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
-
+	//顶点的世界空间坐标
     float4 posWorld = mul(unity_ObjectToWorld, v.vertex);
     #if UNITY_REQUIRE_FRAG_WORLDPOS
         #if UNITY_PACK_WORLDPOS_WITH_TANGENT
@@ -390,12 +396,16 @@ VertexOutputForwardBase vertForwardBase (VertexInput v)
             o.posWorld = posWorld.xyz;
         #endif
     #endif
+	//顶点的裁减空间坐标
     o.pos = UnityObjectToClipPos(v.vertex);
-
+	//UV信息：xy为主纹理UV， zw为细节纹理UV
     o.tex = TexCoords(v);
+	//归一化的视线方向（不一定会归一化...）
     o.eyeVec = NormalizePerVertexNormal(posWorld.xyz - _WorldSpaceCameraPos);
+	//归一化的世界空间的法线
     float3 normalWorld = UnityObjectToWorldNormal(v.normal);
     #ifdef _TANGENT_TO_WORLD
+	    //归一化的世界空间切线
         float4 tangentWorld = float4(UnityObjectToWorldDir(v.tangent.xyz), v.tangent.w);
 
         float3x3 tangentToWorld = CreateTangentToWorldPerVertex(normalWorld, tangentWorld.xyz, tangentWorld.w);

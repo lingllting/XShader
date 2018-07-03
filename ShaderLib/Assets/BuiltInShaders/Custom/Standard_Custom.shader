@@ -1,6 +1,6 @@
 // Unity built-in shader source. Copyright (c) 2016 Unity Technologies. MIT license (see license.txt)
 
-Shader "Standard"
+Shader "Custom/Standard"
 {
     Properties
     {
@@ -36,7 +36,7 @@ Shader "Standard"
         _DetailAlbedoMap("Detail Albedo x2", 2D) = "grey" {}
         _DetailNormalMapScale("Scale", Float) = 1.0
         _DetailNormalMap("Normal Map", 2D) = "bump" {}
-		//是否有第二套UV（用于细节纹理）
+
         [Enum(UV0,0,UV1,1)] _UVSec ("UV Set for secondary textures", Float) = 0
 
 
@@ -85,12 +85,13 @@ Shader "Standard"
             #pragma multi_compile_fwdbase
             #pragma multi_compile_fog
             #pragma multi_compile_instancing
+			#pragma multi_compile _ UNITY_NO_FULL_STANDARD_SHADER
             // Uncomment the following line to enable dithering LOD crossfade. Note: there are more in the file to uncomment for other passes.
             //#pragma multi_compile _ LOD_FADE_CROSSFADE
 
             #pragma vertex vertBase
             #pragma fragment fragBase
-            #include "UnityStandardCoreForward.cginc"
+            #include "UnityStandardCoreForward_Custom.cginc"
 
             ENDCG
         }
@@ -339,7 +340,6 @@ Shader "Standard"
             ENDCG
         }
     }
-
 
     FallBack "VertexLit"
     CustomEditor "StandardShaderGUI"
