@@ -564,6 +564,7 @@ half4 fragForwardAddInternal (VertexOutputForwardAdd i)
 
     UNITY_LIGHT_ATTENUATION(atten, i, s.posWorld)
     UnityLight light = AdditiveLight (IN_LIGHTDIR_FWDADD(i), atten);
+	//ForwardAdd 不计算间接光照
     UnityIndirect noIndirect = ZeroIndirect ();
 
     half4 c = UNITY_BRDF_PBS (s.diffColor, s.specColor, s.oneMinusReflectivity, s.smoothness, s.normalWorld, -s.eyeVec, light, noIndirect);
