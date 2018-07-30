@@ -5,13 +5,16 @@ using UnityEngine;
 [RequireComponent(typeof(Camera))]
 public class Overdraw : MonoBehaviour 
 {
+    //上一个overdraw相机
+    private static Camera s_mPreOverDrawCamera;
+    private static RenderTexture s_mOverDrawRT;
+
     private Shader mOpaqueOverDrawShader;
     private Shader mTransparentOverDrawShader;
     private Camera mCamera;
     private Camera mOverDrawCamera;
     private CameraClearFlags mCurrentCameraClearFlags;
     private int mCullingMask;
-    private RenderTexture mOverDrawRT;
     private bool mOverDrawMode = false;
 
     void Awake()
@@ -37,11 +40,11 @@ public class Overdraw : MonoBehaviour
     {
         mCamera.cullingMask = 0;
         mOverDrawCamera.clearFlags = CameraClearFlags.Nothing;
-        if (mOverDrawRT == null)
+        if (s_mOverDrawRT == null)
         {
-            mOverDrawRT = new RenderTexture(Screen.width, Screen.height, 24, RenderTextureFormat.ARGB32);
+            s_mOverDrawRT = new RenderTexture(Screen.width, Screen.height, 24, RenderTextureFormat.ARGB32);
         }
-        mOverDrawCamera.targetTexture = mOverDrawRT;
+        mOverDrawCamera.targetTexture = s_mOverDrawRT;
         mOverDrawMode = true;
     }
 
@@ -60,19 +63,42 @@ public class Overdraw : MonoBehaviour
         {
             return;
         }
-        RenderTexture.active = mOverDrawRT;
-        GL.Clear(true, true, Color.black);
+        //同一个相机不同帧绘制
+        if (s_mPreOverDrawCamera == mOverDrawCamera)
+        {
+            RenderTexture.active = s_mOverDrawRT;
+            GL.Clear(true, true, Color.black);
+        }
+        //同一帧不同相机绘制
+        else
+        {
+            if (mCamera.clearFlags == CameraClearFlags.Nothing)
+            {
+
+            }
+            else if (mCamera.clearFlags == CameraClearFlags.Depth)
+            {
+                RenderTexture.active = s_mOverDrawRT;
+                GL.Clear(true, false, Color.black);
+            }
+            else
+            {
+                RenderTexture.active = s_mOverDrawRT;
+                GL.Clear(true, true, Color.black);
+            }
+        }
         mOverDrawCamera.SetReplacementShader(mOpaqueOverDrawShader, "RenderType");
         mOverDrawCamera.Render();
         mOverDrawCamera.SetReplacementShader(mTransparentOverDrawShader, "RenderType");
         mOverDrawCamera.Render();
+        s_mPreOverDrawCamera = mOverDrawCamera;
     }
 
     void OnRenderImage(RenderTexture source, RenderTexture destination)
     {
         if (mOverDrawMode)
         {
-            Graphics.Blit(mOverDrawRT, destination);
+            Graphics.Blit(s_mOverDrawRT, destination);
         }
         else
         {
