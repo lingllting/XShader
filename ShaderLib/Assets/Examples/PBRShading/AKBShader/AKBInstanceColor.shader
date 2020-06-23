@@ -1,4 +1,6 @@
-﻿Shader "AKB/InstanceColor" 
+﻿// Upgrade NOTE: upgraded instancing buffer 'MyProp' to new syntax.
+
+Shader "AKB/InstanceColor" 
 {
 	Properties 
 	{
@@ -29,9 +31,10 @@
 				UNITY_VERTEX_INPUT_INSTANCE_ID
 			};
 
-			UNITY_INSTANCING_CBUFFER_START(MyProp)
+			UNITY_INSTANCING_BUFFER_START(MyProp)
 				UNITY_DEFINE_INSTANCED_PROP(half4, _Color)
-			UNITY_INSTANCING_CBUFFER_END
+#define _Color_arr MyProp
+			UNITY_INSTANCING_BUFFER_END(MyProp)
 			float _Intensity;
 			sampler2D _MainTex;
 
@@ -49,7 +52,7 @@
 			half4 frag(v2f i) : SV_Target 
 			{
 				UNITY_SETUP_INSTANCE_ID(i)
-				half4 col = tex2D(_MainTex, i.uv) * UNITY_ACCESS_INSTANCED_PROP(_Color) * _Intensity;
+				half4 col = tex2D(_MainTex, i.uv) * UNITY_ACCESS_INSTANCED_PROP(_Color_arr, _Color) * _Intensity;
 				col.a = 1;
 
 				return col;
