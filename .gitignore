@@ -1,7 +1,7 @@
 
 *.csproj
-ShaderLib/Temp/*
-ShaderLib/Library/*
+Temp/*
+Library/*
 *.suo
 *.sln
 *.json
