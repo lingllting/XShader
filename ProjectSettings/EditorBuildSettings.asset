@@ -4,4 +4,14 @@
 EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
-  m_Scenes: []
+  m_Scenes:
+  - enabled: 1
+    path: Assets/Scenes/ShaderGallery.unity
+    guid: 2bcc47ae6e24a334fa1247eb7b453384
+  - enabled: 1
+    path: Assets/Examples/Diffuse/Diffuse.unity
+    guid: 93520882b10dead47b1049706dfbaedb
+  - enabled: 1
+    path: Assets/Examples/Outline/Outline.unity
+    guid: a15e47b14569f64468315d571df42dea
+  m_configObjects: {}
