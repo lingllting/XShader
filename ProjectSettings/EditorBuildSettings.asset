@@ -9,9 +9,15 @@ EditorBuildSettings:
     path: Assets/Scenes/ShaderGallery.unity
     guid: 2bcc47ae6e24a334fa1247eb7b453384
   - enabled: 1
-    path: Assets/Examples/Diffuse/Diffuse.unity
+    path: Assets/Examples-Builtin/Diffuse/Diffuse.unity
     guid: 93520882b10dead47b1049706dfbaedb
   - enabled: 1
-    path: Assets/Examples/Outline/Outline.unity
+    path: Assets/Examples-Builtin/Outline/Outline.unity
     guid: a15e47b14569f64468315d571df42dea
+  - enabled: 1
+    path: Assets/Examples-URP/RimLight/RimLight.unity
+    guid: 5ddaf0e4b96331f499fccb63f734fa72
+  - enabled: 1
+    path: Assets/Examples-URP/Flow/Flow.unity
+    guid: ff96fe220d938804289de85661ce49fa
   m_configObjects: {}

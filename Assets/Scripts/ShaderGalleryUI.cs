@@ -15,6 +15,8 @@ public class ShaderGalleryUI : MonoBehaviour
     public Button nextMaterialButton;
     public Button previousMaterialButton;
 
+    private int _sceneIndex = 0;
+
     private void Awake()
     {
         DontDestroyOnLoad(gameObject);
@@ -27,12 +29,24 @@ public class ShaderGalleryUI : MonoBehaviour
         
         nextSceneButton.onClick.AddListener(() =>
         {
-            sceneList.scenes[1].LoadAsync(LoadSceneMode.Single);
+            _sceneIndex = _sceneIndex + 1;
+            if (_sceneIndex > sceneList.scenes.Count - 1)
+            {
+                _sceneIndex = sceneList.scenes.Count - 1;
+                return;
+            }
+            sceneList.scenes[_sceneIndex].LoadAsync(LoadSceneMode.Single);
         });
         
         previousSceneButton.onClick.AddListener(() =>
         {
-            sceneList.scenes[0].LoadAsync(LoadSceneMode.Single);
+            _sceneIndex = _sceneIndex - 1;
+            if (_sceneIndex < 0)
+            {
+                _sceneIndex = 0;
+                return;
+            }
+            sceneList.scenes[_sceneIndex].LoadAsync(LoadSceneMode.Single);
         });
     }
 }
