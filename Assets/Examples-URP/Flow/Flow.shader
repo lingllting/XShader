@@ -65,7 +65,7 @@ Shader "Custom/Flow"
                 o.positionCS = TransformObjectToHClip(v.positionOS);
                 o.uv = TRANSFORM_TEX(v.uv, _MainTex);
                 o.normalWS = normalize(TransformObjectToWorldNormal(v.normalOS));
-                o.positionWS = TransformObjectToWorld(v.positionOS);
+                o.positionWS = TransformObjectToWorld(v.positionOS.xyz);
                 o.pivotWS = TransformObjectToWorld(half4(0.0, 0.0, 0.0, 1.0));
                 return o;
             }

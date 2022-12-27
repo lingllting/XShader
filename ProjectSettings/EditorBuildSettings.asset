@@ -20,4 +20,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Examples-URP/Flow/Flow.unity
     guid: ff96fe220d938804289de85661ce49fa
+  - enabled: 1
+    path: Assets/Examples-URP/Transmission/Transmission.unity
+    guid: cd1fda3bfad895946813649a21d38703
   m_configObjects: {}
